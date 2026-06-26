@@ -1,14 +1,14 @@
-import { Body, Controller, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { Request } from 'express';
+
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AuthenticatedMerchant } from '../auth/types/authenticated-merchant.type';
+import { type AuthenticatedMerchant } from '../../common/types/auth/authenticated-merchant.type';
+import { CurrentMerchant } from '../../common/decorators/jwt-auth.decorator';
 import { MerchantProfileDto } from './dto/merchant-profile.dto';
 import { MerchantWithProfileDto } from './dto/merchant-with-profile.dto';
 import { UpdateMerchantDto } from './dto/update-merchant.dto';
 import { MerchantsService } from './merchants.service';
 
-type AuthenticatedRequest = Request & { user: AuthenticatedMerchant };
 
 @ApiTags('Merchant')
 @ApiBearerAuth()
@@ -19,18 +19,18 @@ export class MerchantsController {
 
   @Get('me')
   @ApiOkResponse({ type: MerchantWithProfileDto })
-  getMe(@Req() request: AuthenticatedRequest) {
-    return this.merchantsService.getMe(request.user.merchantId);
+  getMe(@CurrentMerchant() merchant: AuthenticatedMerchant) {
+    return this.merchantsService.getMe(merchant.merchantId);
   }
 
   @Post('onboarding')
   @ApiOkResponse({ type: MerchantWithProfileDto })
   completeOnboarding(
-    @Req() request: AuthenticatedRequest,
+    @CurrentMerchant() merchant: AuthenticatedMerchant,
     @Body() dto: MerchantProfileDto,
   ) {
     return this.merchantsService.completeOnboarding(
-      request.user.merchantId,
+      merchant.merchantId,
       dto,
     );
   }
@@ -38,18 +38,18 @@ export class MerchantsController {
   @Patch('me')
   @ApiOkResponse({ type: MerchantWithProfileDto })
   updateMe(
-    @Req() request: AuthenticatedRequest,
+    @CurrentMerchant() merchant: AuthenticatedMerchant,
     @Body() dto: UpdateMerchantDto,
   ) {
-    return this.merchantsService.updateMe(request.user.merchantId, dto);
+    return this.merchantsService.updateMe(merchant.merchantId, dto);
   }
 
   @Patch('profile/me')
   @ApiOkResponse({ type: MerchantWithProfileDto })
   updateProfile(
-    @Req() request: AuthenticatedRequest,
+    @CurrentMerchant() merchant: AuthenticatedMerchant,
     @Body() dto: MerchantProfileDto,
   ) {
-    return this.merchantsService.updateProfile(request.user.merchantId, dto);
+    return this.merchantsService.updateProfile(merchant.merchantId, dto);
   }
 }

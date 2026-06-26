@@ -16,8 +16,8 @@ import {
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
-import { AuthenticatedMerchant } from './types/authenticated-merchant.type';
-import { RefreshTokenPayload } from './types/token-payload.type';
+import { AuthenticatedMerchant } from '../../common/types/auth/authenticated-merchant.type';
+import { RefreshTokenPayload } from '../../common/types/auth/token-payload.type';
 
 @Injectable()
 export class AuthService {

@@ -1,20 +1,19 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { AuthenticatedMerchant } from './types/authenticated-merchant.type';
+import { type AuthenticatedMerchant } from '../../common/types/auth/authenticated-merchant.type';
+import { CurrentMerchant } from '../../common/decorators/jwt-auth.decorator';
 
-type AuthenticatedRequest = Request & { user: AuthenticatedMerchant };
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -43,7 +42,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ schema: { example: { success: true } } })
-  logout(@Body() dto: RefreshTokenDto, @Req() request: AuthenticatedRequest) {
-    return this.authService.logout(dto, request.user);
+  logout(@Body() dto: RefreshTokenDto, @CurrentMerchant() merchant: AuthenticatedMerchant) {
+    return this.authService.logout(dto, merchant);
   }
 }

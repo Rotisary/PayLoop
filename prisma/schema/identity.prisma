@@ -11,6 +11,7 @@ model Merchant {
   updatedAt          DateTime         @updatedAt
   profile            MerchantProfile?
   refreshTokens      RefreshToken[]
+  apiCredentials     ApiCredential[]
 }
 
 model MerchantProfile {
