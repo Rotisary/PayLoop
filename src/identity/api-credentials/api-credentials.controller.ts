@@ -33,7 +33,7 @@ import { CurrentMerchant } from '../../common/decorators/jwt-auth.decorator';
 
 
 @ApiTags('API Keys (Dashboard)')
-@ApiBearerAuth('JWT')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('api-keys')
 export class ApiCredentialsController {
@@ -52,7 +52,7 @@ export class ApiCredentialsController {
     type: ApiCredentialCreatedResponse,
     description: 'API key created. Save the apiKey field — it will not be shown again.',
   })
-  async create(
+  create(
     @CurrentMerchant() merchant: AuthenticatedMerchant,
     @Body() dto: CreateApiCredentialDto,
   ): Promise<ApiCredentialCreatedResponse> {
@@ -66,7 +66,7 @@ export class ApiCredentialsController {
     description: 'Returns metadata for all API keys belonging to the merchant. Raw keys are never returned.',
   })
   @ApiOkResponse({ type: [ApiCredentialMetaResponse] })
-  async findAll(
+  findAll(
     @CurrentMerchant() merchant: AuthenticatedMerchant
   ): Promise<ApiCredentialMetaResponse[]> {
     return this.apiKeysService.findAll(merchant.merchantId);
@@ -76,7 +76,7 @@ export class ApiCredentialsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get API key by ID' })
   @ApiOkResponse({ type: ApiCredentialMetaResponse })
-  async findOne(
+  findOne(
     @CurrentMerchant() merchant: AuthenticatedMerchant,
     @Param('id') id: string,
   ): Promise<ApiCredentialMetaResponse> {
@@ -90,7 +90,7 @@ export class ApiCredentialsController {
     description: 'Only the name can be updated. Environment cannot be changed after creation.',
   })
   @ApiOkResponse({ type: ApiCredentialMetaResponse })
-  async update(
+  update(
     @CurrentMerchant() merchant: AuthenticatedMerchant,
     @Param('id') id: string,
     @Body() dto: UpdateApiCredentialDto,
@@ -106,7 +106,7 @@ export class ApiCredentialsController {
     description: 'Permanently revokes the API key. Requests using this key will immediately start failing. This action cannot be undone.',
   })
   @ApiNoContentResponse({ description: 'Key revoked successfully' })
-  async revoke(
+  revoke(
     @CurrentMerchant() merchant: AuthenticatedMerchant,
     @Param('id') id: string,
   ): Promise<void> {
