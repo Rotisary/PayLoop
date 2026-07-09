@@ -1,0 +1,2 @@
+export const HTTP_DEFAULT_TIMEOUT_MS = 10000;
+export const HTTP_DEFAULT_MAX_REDIRECTS = 5;
