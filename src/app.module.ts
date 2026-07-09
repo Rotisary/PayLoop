@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from './common/http/http.module';
 import { IdentityModule } from './identity/identity.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QueueModule } from './common/queue';
+import { MonoModule } from './providers/mono/mono.module';
 
 
 @Module({
@@ -12,7 +14,9 @@ import { QueueModule } from './common/queue';
       isGlobal: true,
     }),
     PrismaModule,
+    HttpModule,
     QueueModule,
+    MonoModule,
     IdentityModule,
   ],
   controllers: [],
