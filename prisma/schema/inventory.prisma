@@ -1,0 +1,20 @@
+model Product {
+  id                String   @id @default(cuid())
+  merchantId        String   @db.Uuid
+  merchant          Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  environment       Environment
+  name              String
+  price             Int
+  externalProductId String
+  sku               String?
+  description       String
+  salesCount        Int      @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([merchantId, environment, externalProductId])
+  @@index([merchantId, environment])
+  @@index([merchantId, externalProductId])
+}

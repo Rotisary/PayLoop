@@ -12,6 +12,7 @@ model Merchant {
   profile            MerchantProfile?
   refreshTokens      RefreshToken[]
   apiCredentials     ApiCredential[]
+  products           Product[]
 }
 
 model MerchantProfile {
