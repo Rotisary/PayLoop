@@ -4,4 +4,4 @@ import { ProductsModule } from './products/products.module';
 @Module({
   imports: [ProductsModule]
 })
-export class InventoryModule {}
+export class CommerceModule {}

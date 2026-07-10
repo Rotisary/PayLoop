@@ -5,7 +5,7 @@ import { IdentityModule } from './identity/identity.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QueueModule } from './common/queue';
 import { MonoModule } from './providers/mono/mono.module';
-import { InventoryModule } from './inventory/inventory.module';
+import { CommerceModule } from './commerce/commerce.module';
 
 
 @Module({
@@ -19,7 +19,7 @@ import { InventoryModule } from './inventory/inventory.module';
     QueueModule,
     MonoModule,
     IdentityModule,
-    InventoryModule,
+    CommerceModule,
   ],
   controllers: [],
   providers: [],
