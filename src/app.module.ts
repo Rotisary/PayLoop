@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { QueueModule } from './common/queue';
 import { MonoModule } from './providers/mono/mono.module';
 import { CommerceModule } from './commerce/commerce.module';
+import { PaymentsModule } from './payments/payments.module';
 
 
 @Module({
@@ -20,6 +21,7 @@ import { CommerceModule } from './commerce/commerce.module';
     MonoModule,
     IdentityModule,
     CommerceModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [],

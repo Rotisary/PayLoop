@@ -13,6 +13,8 @@ model Merchant {
   refreshTokens      RefreshToken[]
   apiCredentials     ApiCredential[]
   products           Product[]
+  customers          Customer[]
+  mandates           Mandate[]
 }
 
 model MerchantProfile {

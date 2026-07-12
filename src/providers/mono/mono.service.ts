@@ -58,14 +58,15 @@ export class MonoService {
   private mapMandateResponse(
     response: MonoCreateMandateResponse,
   ): MonoMappedMandateResponse {
-      return {
-          provider: MONO_PROVIDER_NAME,
-          data: {
-              mandateId: response.data.mandate_id,
-              reference: response.data.reference,
-              status: response.status,
-              authorizationUrl: response.data.mono_url,
-          },
-      };
-}
+    return {
+      provider: MONO_PROVIDER_NAME,
+      data: {
+        mandateId: response.data.mandate_id,
+        reference: response.data.reference,
+        status: response.status,
+        authorizationUrl: response.data.mono_url,
+        createdAt: response.data.created_at,
+      },
+    };
+  }
 }

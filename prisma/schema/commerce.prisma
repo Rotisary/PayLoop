@@ -1,5 +1,5 @@
 model Product {
-  id                String   @id @default(cuid())
+  id                String   @id @default(uuid()) @db.Uuid
   merchantId        String   @db.Uuid
   merchant          Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
 
@@ -17,4 +17,24 @@ model Product {
   @@unique([merchantId, environment, externalProductId])
   @@index([merchantId, environment])
   @@index([merchantId, externalProductId])
+}
+
+model Customer {
+  id                 String   @id @default(uuid()) @db.Uuid
+  merchantId         String   @db.Uuid
+  merchant           Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  environment        Environment
+
+  name               String
+  bankName           String
+  bankAccountNumber  String
+  providerCustomerId String
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  mandates           Mandate[]
+
+  @@unique([merchantId, environment, providerCustomerId])
+  @@index([merchantId, environment])
 }
