@@ -17,6 +17,8 @@ model Product {
   @@unique([merchantId, environment, externalProductId])
   @@index([merchantId, environment])
   @@index([merchantId, externalProductId])
+
+  subscriptions Subscription[]
 }
 
 model Customer {
@@ -35,6 +37,7 @@ model Customer {
   updatedAt          DateTime @updatedAt
 
   mandates           Mandate[]
+  subscriptions      Subscription[]
 
   @@unique([merchantId, environment, providerCustomerId])
   @@index([merchantId, environment])

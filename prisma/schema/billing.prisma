@@ -1,0 +1,42 @@
+enum BillingInterval {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  PAST_DUE
+  CANCELLED
+}
+
+model Subscription {
+  id             String             @id @default(uuid()) @db.Uuid
+  merchantId     String             @db.Uuid
+  merchant       Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  environment    Environment
+  customerId     String             @db.Uuid
+  customer       Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  products       Product[]
+  mandateId      String             @unique @db.Uuid
+  mandate        Mandate            @relation(fields: [mandateId], references: [id], onDelete: Restrict)
+
+  amount         Int
+  billingInterval BillingInterval
+  nextChargeDate DateTime
+  status         SubscriptionStatus @default(ACTIVE)
+  metadata       Json?
+
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([merchantId, environment])
+  @@index([merchantId, environment, status])
+  @@index([merchantId, environment, nextChargeDate])
+  @@index([customerId])
+}

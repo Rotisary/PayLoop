@@ -22,6 +22,7 @@ model Mandate {
 
   customerId         String        @db.Uuid
   customer           Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  subscription       Subscription?
 
   amount             Int
 

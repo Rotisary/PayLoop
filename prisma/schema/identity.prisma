@@ -15,6 +15,7 @@ model Merchant {
   products           Product[]
   customers          Customer[]
   mandates           Mandate[]
+  subscriptions      Subscription[]
 }
 
 model MerchantProfile {
