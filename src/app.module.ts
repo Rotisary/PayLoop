@@ -7,6 +7,7 @@ import { QueueModule } from './common/queue';
 import { MonoModule } from './providers/mono/mono.module';
 import { CommerceModule } from './commerce/commerce.module';
 import { PaymentsModule } from './payments/payments.module';
+import { BillingModule } from './billing/billing.module';
 
 
 @Module({
@@ -22,6 +23,7 @@ import { PaymentsModule } from './payments/payments.module';
     IdentityModule,
     CommerceModule,
     PaymentsModule,
+    BillingModule,
   ],
   controllers: [],
   providers: [],
