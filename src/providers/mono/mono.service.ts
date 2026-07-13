@@ -31,7 +31,7 @@ export class MonoService {
     this.assertConfigured();
 
     const response = await this.httpService.post<MonoCreateMandateResponse>(
-      this.monoConfig.baseUrl,
+      this.buildUrl('payments/initiate'),
       request,
       {
         headers: this.buildHeaders(),
@@ -46,7 +46,7 @@ export class MonoService {
     this.assertConfigured();
 
     const response = await this.httpService.post<MonoCreateCustomerResponse>(
-      this.monoConfig.baseUrl,
+      this.buildUrl('customers'),
       request,
       {
         headers: this.buildHeaders(),
@@ -63,6 +63,13 @@ export class MonoService {
       'content-type': 'application/json',
       'mono-sec-key': this.monoConfig.secretKey,
     };
+  }
+
+  private buildUrl(endpoint: string): string {
+    const baseUrl = this.monoConfig.baseUrl.replace(/\/+$/, '');
+    const path = endpoint.replace(/^\/+/, '');
+
+    return `${baseUrl}/${path}`;
   }
 
   private assertConfigured(): void {
