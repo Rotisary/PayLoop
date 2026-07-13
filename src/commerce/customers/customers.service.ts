@@ -2,25 +2,41 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Customer } from '@prisma/client';
 import { Environment } from '../../common/enums/api-credentials.enums';
 import { PrismaService } from '../../prisma/prisma.service';
+import { MonoService } from '../../providers/mono/mono.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { ExternalServiceException } from 'src/common/http/http.exceptions';
 
 @Injectable()
 export class CustomersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly monoService: MonoService,
+  ) {}
 
   async create(
     merchantId: string, environment: Environment, dto: CreateCustomerDto
   ): Promise<Customer> {
+
+    const response = await this.monoService.createCustomer({
+        identity: dto.identity,
+        email: dto.email,
+        first_name: dto.firstName,
+        last_name: dto.lastName,
+        address: dto.address,
+        phone: dto.phone
+    })
+
     return this.prisma.customer.create({
-      data: {
-        merchantId,
-        environment,
-        name: dto.name,
-        bankName: dto.bankName,
-        bankAccountNumber: dto.bankAccountNumber,
-        // providerCustomerId: dto.providerCustomerId,
-      },
+        data: {
+            merchantId,
+            environment,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            bankName: dto.bankName,
+            bankAccountNumber: dto.bankAccountNumber,
+            providerCustomerId: response.data.customerId,
+        },
     });
   }
 

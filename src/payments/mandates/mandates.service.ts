@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Environment } from '../../common/enums/api-credentials.enums';
+import { MandateStatus } from '../../common/enums/mandates.enums';
 import { PrismaService } from '../../prisma/prisma.service';
-import { MandateStatus, Mandate } from '@prisma/client';
+import { Mandate } from '@prisma/client';
 import { MonoCreateMandateRequest } from '../../providers/mono/types/mono-mandate.types';
 import { MonoService } from '../../providers/mono/mono.service';
 
@@ -28,10 +29,23 @@ export class MandatesService {
 				amount: data.amount,
 			},          
         })
-		const response = await this.monoService.createMandate(data);
-        this.updateMetadata(mandate.id, response.data.mandateId, response.data.createdAt)
-        return await this.updateStatus(merchantId, environment, mandate.id, MandateStatus.SUBMITTED)
-	}
+
+        try {
+            const response = await this.monoService.createMandate(data);
+
+            this.updateMetadata(
+                mandate.id, response.data.mandateId, response.data.createdAt,
+            );
+            return await this.updateStatus(
+                merchantId, environment, mandate.id, MandateStatus.SUBMITTED,
+            );
+        } catch (error) {
+            await this.updateStatus(
+                merchantId, environment, mandate.id, MandateStatus.FAILED,
+            );
+            throw error;
+        }
+    }
 
 	async updateStatus(
 		merchantId: string,
@@ -54,7 +68,7 @@ export class MandatesService {
 
 		return this.prisma.mandate.update({
 			where: { id: mandate.id },
-			data: { status },
+			data: { status: status },
 		});
 	}
 

@@ -8,8 +8,16 @@ import {
   MonoCreateMandateRequest,
   MonoCreateMandateResponse
 } from './types/mono-mandate.types';
+import { 
+  MonoCreateCustomerRequest,
+  MonoCreateCustomerResponse
+} from './types/mono-customer.types';
 import { MONO_CONFIG, type MonoConfig } from './mono.config';
-import { MONO_PROVIDER_NAME, MonoMappedMandateResponse } from './types/mono.types';
+import { 
+  MONO_PROVIDER_NAME, 
+  MonoMappedMandateResponse,
+  MonoMappedCustomerResponse 
+} from './types/mono.types';
 
 @Injectable()
 export class MonoService {
@@ -32,6 +40,21 @@ export class MonoService {
     );
 
     return this.mapMandateResponse(response);
+  }
+
+  async createCustomer(request: MonoCreateCustomerRequest): Promise<MonoMappedCustomerResponse> {
+    this.assertConfigured();
+
+    const response = await this.httpService.post<MonoCreateCustomerResponse>(
+      this.monoConfig.baseUrl,
+      request,
+      {
+        headers: this.buildHeaders(),
+        provider: MONO_PROVIDER_NAME,
+      },
+    );
+
+    return this.mapCustomerResponse(response);
   }
 
   private buildHeaders(): Record<string, string> {
@@ -64,8 +87,22 @@ export class MonoService {
         mandateId: response.data.mandate_id,
         reference: response.data.reference,
         status: response.status,
+        message: response.message,
         authorizationUrl: response.data.mono_url,
         createdAt: response.data.created_at,
+      },
+    };
+  }
+
+  private mapCustomerResponse(
+    response: MonoCreateCustomerResponse,
+  ): MonoMappedCustomerResponse {
+    return {
+      provider: MONO_PROVIDER_NAME,
+      data: {
+        customerId: response.data.id,
+        status: response.status,
+        message: response.message
       },
     };
   }

@@ -25,7 +25,8 @@ model Customer {
   merchant           Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
   environment        Environment
 
-  name               String
+  firstName          String
+  lastName           String
   bankName           String
   bankAccountNumber  String
   providerCustomerId String

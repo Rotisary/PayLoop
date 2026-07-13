@@ -4,6 +4,7 @@ enum MandateStatus {
   APPROVED
   PAUSED
   CANCELLED
+  FAILED
 }
 
 model Mandate {
