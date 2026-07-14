@@ -1,4 +1,4 @@
-import { BillingInterval } from "../enums/billing-interval.enum";
+import { BillingInterval } from '@prisma/client';
 import { Prisma } from '@prisma/client';
 
 

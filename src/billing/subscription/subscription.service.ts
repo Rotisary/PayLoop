@@ -1,14 +1,18 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Subscription } from '@prisma/client';
+import { 
+    Subscription,
+    SubscriptionStatus,
+    BillingInterval 
+} from '@prisma/client';
 import { Environment } from '../../common/enums/api-credentials.enums';
-import { SubscriptionStatus } from './enums/subscription-status.enum';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateSubscriptionRequest } from './types/create-subscription.types';
-import { BillingInterval } from './enums/billing-interval.enum';
+
 
 @Injectable()
 export class SubscriptionService {
@@ -67,7 +71,7 @@ export class SubscriptionService {
         amount,
         billingInterval: data.billingInterval as BillingInterval,
         nextChargeDate: data.nextChargeDate,
-        status: SubscriptionStatus.ACTIVE,
+        status: SubscriptionStatus.PENDING,
         metadata: data.metadata,
         products: {
           connect: uniqueProductIds.map((id) => ({ id })),
@@ -106,19 +110,41 @@ export class SubscriptionService {
   async pause(
     merchantId: string, environment: Environment, subscriptionId: string,
   ): Promise<Subscription> {
-    return this.updateStatus(merchantId, environment, subscriptionId, SubscriptionStatus.PAUSED);
+    return this.transitionStatus(
+      merchantId,
+      environment,
+      subscriptionId,
+      [SubscriptionStatus.ACTIVE],
+      SubscriptionStatus.PAUSED,
+    );
   }
 
   async resume(
     merchantId: string, environment: Environment, subscriptionId: string,
   ): Promise<Subscription> {
-    return this.updateStatus(merchantId, environment, subscriptionId, SubscriptionStatus.ACTIVE);
+    return this.transitionStatus(
+      merchantId,
+      environment,
+      subscriptionId,
+      [SubscriptionStatus.PAUSED],
+      SubscriptionStatus.ACTIVE,
+    );
   }
 
   async cancel(
     merchantId: string, environment: Environment, subscriptionId: string,
   ): Promise<Subscription> {
-    return this.updateStatus(merchantId, environment, subscriptionId, SubscriptionStatus.CANCELLED);
+    return this.transitionStatus(
+      merchantId,
+      environment,
+      subscriptionId,
+      [
+        SubscriptionStatus.ACTIVE,
+        SubscriptionStatus.PAUSED,
+        SubscriptionStatus.PAST_DUE,
+      ],
+      SubscriptionStatus.CANCELLED,
+    );
   }
 
   async markPastDue(
@@ -126,7 +152,52 @@ export class SubscriptionService {
     environment: Environment,
     subscriptionId: string,
   ): Promise<Subscription> {
-    return this.updateStatus(merchantId, environment, subscriptionId, SubscriptionStatus.PAST_DUE);
+    return this.transitionStatus(
+      merchantId,
+      environment,
+      subscriptionId,
+      [SubscriptionStatus.ACTIVE],
+      SubscriptionStatus.PAST_DUE,
+    );
+  }
+
+  async reactivate(
+    merchantId: string,
+    environment: Environment,
+    subscriptionId: string,
+  ): Promise<Subscription> {
+    return this.transitionStatus(
+      merchantId,
+      environment,
+      subscriptionId,
+      [SubscriptionStatus.PAST_DUE],
+      SubscriptionStatus.ACTIVE,
+    );
+  }
+
+  async advanceNextChargeDate(
+    merchantId: string,
+    environment: Environment,
+    subscriptionId: string,
+  ): Promise<Subscription> {
+    const subscription = await this.assertSubscription(merchantId, environment, subscriptionId);
+
+    const restrictedStatuses: SubscriptionStatus[] = [
+      SubscriptionStatus.CANCELLED, SubscriptionStatus.PAUSED,
+    ];
+    if (restrictedStatuses.includes(subscription.status)) {
+      throw new ConflictException('Cancelled or Paused subscriptions cannot advance billing dates');
+    }
+
+    const nextChargeDate = this.calculateNextChargeDate(
+      subscription.nextChargeDate,
+      subscription.billingInterval,
+    );
+
+    return this.prisma.subscription.update({
+      where: { id: subscriptionId },
+      data: { nextChargeDate },
+    });
   }
 
   async updateNextChargeDate(
@@ -152,9 +223,7 @@ export class SubscriptionService {
       where: {
         merchantId,
         environment,
-        status: {
-          in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.PAST_DUE],
-        },
+        status: SubscriptionStatus.ACTIVE,
         nextChargeDate: {
           lte: dueBefore,
         },
@@ -163,13 +232,24 @@ export class SubscriptionService {
     });
   }
 
-  private async updateStatus(
+  private async transitionStatus(
     merchantId: string,
     environment: Environment,
     subscriptionId: string,
+    allowedCurrentStatuses: SubscriptionStatus[],
     status: SubscriptionStatus,
   ): Promise<Subscription> {
-    await this.assertSubscription(merchantId, environment, subscriptionId);
+    const subscription = await this.assertSubscription(merchantId, environment, subscriptionId);
+
+    if (subscription.status === status) {
+      throw new ConflictException('Subscription is already in the requested state');
+    }
+
+    if (!allowedCurrentStatuses.includes(subscription.status)) {
+      throw new ConflictException(
+        `Cannot transition subscription from ${subscription.status} to ${status}`,
+      );
+    }
 
     return this.prisma.subscription.update({
       where: { id: subscriptionId },
@@ -181,14 +261,43 @@ export class SubscriptionService {
     merchantId: string,
     environment: Environment,
     subscriptionId: string,
-  ): Promise<void> {
+  ): Promise<Subscription> {
     const subscription = await this.prisma.subscription.findFirst({
       where: { id: subscriptionId, merchantId, environment },
-      select: { id: true },
     });
 
     if (!subscription) {
       throw new NotFoundException('Subscription not found');
+    }
+
+    return subscription;
+  }
+
+  private calculateNextChargeDate(
+    currentNextChargeDate: Date,
+    billingInterval: BillingInterval,
+  ): Date {
+    const nextChargeDate = new Date(currentNextChargeDate);
+
+    switch (billingInterval) {
+      case BillingInterval.DAILY:
+        nextChargeDate.setDate(nextChargeDate.getDate() + 1);
+        return nextChargeDate;
+      case BillingInterval.WEEKLY:
+        nextChargeDate.setDate(nextChargeDate.getDate() + 7);
+        return nextChargeDate;
+      case BillingInterval.MONTHLY:
+        nextChargeDate.setMonth(nextChargeDate.getMonth() + 1);
+        return nextChargeDate;
+      case BillingInterval.YEARLY:
+        nextChargeDate.setFullYear(nextChargeDate.getFullYear() + 1);
+        return nextChargeDate;
+      case BillingInterval.CUSTOM:
+        throw new ConflictException(
+          'CUSTOM billing interval requires explicit next charge date management',
+        );
+      default:
+        throw new ConflictException(`Unsupported billing interval: ${billingInterval}`);
     }
   }
 }
