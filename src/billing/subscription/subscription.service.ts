@@ -237,23 +237,23 @@ export class SubscriptionService {
     environment: Environment,
     subscriptionId: string,
     allowedCurrentStatuses: SubscriptionStatus[],
-    status: SubscriptionStatus,
+    to: SubscriptionStatus,
   ): Promise<Subscription> {
     const subscription = await this.assertSubscription(merchantId, environment, subscriptionId);
 
-    if (subscription.status === status) {
+    if (subscription.status === to) {
       throw new ConflictException('Subscription is already in the requested state');
     }
 
     if (!allowedCurrentStatuses.includes(subscription.status)) {
       throw new ConflictException(
-        `Cannot transition subscription from ${subscription.status} to ${status}`,
+        `Cannot transition subscription from ${subscription.status} to ${to}`,
       );
     }
 
     return this.prisma.subscription.update({
       where: { id: subscriptionId },
-      data: { status },
+      data: { status: to },
     });
   }
 
