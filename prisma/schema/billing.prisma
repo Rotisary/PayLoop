@@ -29,7 +29,7 @@ model Subscription {
   amount         Int
   billingInterval BillingInterval
   nextChargeDate DateTime
-  status         SubscriptionStatus @default(ACTIVE)
+  status         SubscriptionStatus @default(PENDING)
   metadata       Json?
 
   createdAt      DateTime           @default(now())
