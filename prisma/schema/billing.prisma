@@ -23,7 +23,6 @@ model Subscription {
   customerId     String             @db.Uuid
   customer       Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  products       Product[]
   mandateId      String             @unique @db.Uuid
   mandate        Mandate            @relation(fields: [mandateId], references: [id], onDelete: Restrict)
 
@@ -35,6 +34,8 @@ model Subscription {
 
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
+  products       Product[]
+  orders         Order[]
 
   @@index([merchantId, environment])
   @@index([merchantId, environment, status])

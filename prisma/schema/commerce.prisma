@@ -1,3 +1,13 @@
+enum OrderStatus {
+  PENDING
+  PAYMENT_PROCESSING
+  PAID
+  FULFILLED
+  FAILED
+  CANCELLED
+}
+
+
 model Product {
   id                String   @id @default(uuid()) @db.Uuid
   merchantId        String   @db.Uuid
@@ -38,7 +48,36 @@ model Customer {
 
   mandates           Mandate[]
   subscriptions      Subscription[]
+  orders             Order[]
 
   @@unique([merchantId, environment, providerCustomerId])
   @@index([merchantId, environment])
+}
+
+model Order {
+  id                 String   @id @default(uuid()) @db.Uuid
+  merchantId         String   @db.Uuid
+  merchant           Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  environment        Environment
+
+  subscriptionId     String   @db.Uuid
+  subscription       Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  customerId         String   @db.Uuid
+  customer           Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  amount             Int
+  currency           String
+  billingPeriodStart DateTime
+  billingPeriodEnd   DateTime
+  status             OrderStatus @default(PENDING)
+  metadata           Json?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([merchantId, environment])
+  @@index([subscriptionId, status])
+  @@index([customerId])
+  @@index([status])
 }
